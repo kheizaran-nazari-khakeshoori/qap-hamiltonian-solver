@@ -3,7 +3,9 @@
 This script:
 - Loads instances/10-k.npz for k=1..100
 - Computes the exact QAP ground state via brute-force
-- Runs Simulated Annealing with the same settings used in batch experiments
+- Runs Simulated Annealing 100 times per instance with the same
+  schedule used in batch experiments (calculation.py keeps trials=5
+  for speed across 700 instances; here we use 100 for rigorous N=10 stats)
 - Writes a CSV summarizing gaps and success for each instance
 
 Usage (from project root):
@@ -30,6 +32,7 @@ from hemiltonian_energy import qap_cost
 INSTANCES_DIR = Path("instances")
 SIZE = 10
 INSTANCES_PER_SIZE = 100
+TRIALS = 100
 OUTPUT_CSV = Path("size10_ground_vs_sa.csv")
 
 
@@ -46,12 +49,15 @@ def main() -> None:
 		"ground_cost",
 		"sa_initial_cost",
 		"sa_best_cost",
+		"sa_avg_best_cost",
 		"sa_final_cost",
 		"sa_steps",
 		"sa_accepted_moves",
 		"sa_attempted_moves",
+		"trials",
+		"prob_solved",
 		"gap_sa_minus_ground",
-		"sa_reached_ground",  # 1 if SA_best == ground within tolerance
+		"sa_reached_ground",  # 1 if best-of-100 == ground within tolerance
 	]
 
 	with OUTPUT_CSV.open("w", newline="") as f_out:
@@ -76,23 +82,35 @@ def main() -> None:
 			# Exact ground state for this instance.
 			ground = brute_force_ground_state(F, D, max_n=SIZE)
 
-			# Single SA run with the same schedule as in calculation.run_all_calculations_bundle.
+			# 100 SA runs, same schedule as calculation.run_all_calculations_bundle.
+			# Different start (np.roll) + seed per trial, like the 5-trial bundle.
 			n = F.shape[0]
 			p0 = np.arange(n, dtype=int)
 			sa_steps = max(1_500, min(8_000, n * 450))
 
-			result = pure_simulated_annealing(
-				p0=p0,
-				F=F,
-				D=D,
-				initial_temp=3.5,
-				cooling_rate=0.998,
-				steps=sa_steps,
-				seed=42,
-			)
+			best_costs = np.empty(TRIALS, dtype=float)
+			accepted_sum = 0
+			for trial in range(TRIALS):
+				result = pure_simulated_annealing(
+					p0=np.roll(p0, trial),
+					F=F,
+					D=D,
+					initial_temp=3.5,
+					cooling_rate=0.998,
+					steps=sa_steps,
+					seed=42 + trial,
+				)
+				best_costs[trial] = float(result.best_cost)
+				accepted_sum += int(result.accepted_moves)
+				if trial == 0:
+					final_cost_first = float(result.final_cost)
 
 			initial_cost = float(qap_cost(F, D, p0))
-			gap = float(result.best_cost - ground.best_cost)
+			best_of_100 = float(np.min(best_costs))
+			avg_best = float(np.mean(best_costs))
+			solved = int(np.sum(best_costs <= ground.best_cost + 1e-9))
+			prob_solved = solved / float(TRIALS)
+			gap = float(best_of_100 - ground.best_cost)
 			success = 1 if abs(gap) <= 1e-9 else 0
 
 			row = {
@@ -100,11 +118,14 @@ def main() -> None:
 				"instance": inst_idx,
 				"ground_cost": float(ground.best_cost),
 				"sa_initial_cost": float(initial_cost),
-				"sa_best_cost": float(result.best_cost),
-				"sa_final_cost": float(result.final_cost),
-				"sa_steps": float(result.attempted_moves),
-				"sa_accepted_moves": float(result.accepted_moves),
-				"sa_attempted_moves": float(result.attempted_moves),
+				"sa_best_cost": float(best_of_100),
+				"sa_avg_best_cost": float(avg_best),
+				"sa_final_cost": float(final_cost_first),
+				"sa_steps": float(sa_steps),
+				"sa_accepted_moves": float(accepted_sum / float(TRIALS)),
+				"sa_attempted_moves": float(sa_steps),
+				"trials": float(TRIALS),
+				"prob_solved": float(prob_solved),
 				"gap_sa_minus_ground": float(gap),
 				"sa_reached_ground": float(success),
 			}
