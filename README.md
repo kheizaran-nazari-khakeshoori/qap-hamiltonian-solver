@@ -8,7 +8,7 @@
 **Reproduce:** `pip install -r requirements.txt` then `python main.py` / `python compare_sa_to_ground_state.py`
 **Author:** Kheizaran Nazari Khakeshoori — ORCID: https://orcid.org/0009-0000-2931-4503
 **Preprint:** in preparation from BSc thesis.
-***Portfolio Project*** *— Demonstrates combinatorial optimization, statistical physics–inspired heuristics, Hamiltonian energy modeling, and reproducible experimental evaluation with Python & NumPy.*
+
 
 ![Workflow](plots/readme_workflow.png)
 ![QAP Matrices and Cost Landscape](plots/readme_qap_matrices.png)
