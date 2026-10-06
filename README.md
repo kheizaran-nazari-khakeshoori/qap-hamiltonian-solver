@@ -1,7 +1,5 @@
 # QAP Hamiltonian Solver — Simulated Annealing vs Exact Ground State
 
-# QAP Hamiltonian Solver — Simulated Annealing vs Exact Ground State
-
 > Research project (BSc thesis-linked, supervised by Prof. Giovanni Finocchio, UniME MIFT).
 > Question: how close can O(1) delta-swap Simulated Annealing get to exact QAP optima, and how does it scale to N=100?
 
