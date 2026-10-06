@@ -1,7 +1,15 @@
 # QAP Hamiltonian Solver — Simulated Annealing vs Exact Ground State
 
-*Combinatorial optimization framework that solves Quadratic Assignment Problems via Metropolis Simulated Annealing and validates solutions against exact brute-force ground states.*
+# QAP Hamiltonian Solver — Simulated Annealing vs Exact Ground State
 
+> Research project (BSc thesis-linked, supervised by Prof. Giovanni Finocchio, UniME MIFT).
+> Question: how close can O(1) delta-swap Simulated Annealing get to exact QAP optima, and how does it scale to N=100?
+
+**Method:** QAP mapped to Hamiltonian cost `Σ F[i,j]·D[P[i],P[j]]`; Metropolis SA with geometric cooling, O(1) incremental swap evaluation.
+**Validation:** brute-force exact ground state for N ≤ 10, gap analysis + temperature-schedule tuning; scaling tests on synthetic instances to N=100.
+**Reproduce:** `pip install -r requirements.txt` then `python main.py` / `python compare_sa_to_ground_state.py`
+**Author:** Kheizaran Nazari Khakeshoori — ORCID: https://orcid.org/0009-0000-2931-4503
+**Preprint:** in preparation from BSc thesis.
 ***Portfolio Project*** *— Demonstrates combinatorial optimization, statistical physics–inspired heuristics, Hamiltonian energy modeling, and reproducible experimental evaluation with Python & NumPy.*
 
 ![Workflow](plots/readme_workflow.png)
